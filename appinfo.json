@@ -4,10 +4,26 @@
         "configurable"
     ],
     "companyName": "PetiteAppli",
-    "longName": "Smabble",
+    "longName": "Smappee_beta",
     "projectType": "pebblejs",
     "resources": {
         "media": [
+            {
+                "file": "images/menu_icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_MENU_ICON",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/logo_splash.png",
+                "name": "IMAGE_LOGO_SPLASH",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/tile_splash.png",
+                "name": "IMAGE_TILE_SPLASH",
+                "type": "bitmap"
+            },
             {
                 "file": "fonts/UbuntuMono-Regular.ttf",
                 "name": "MONO_FONT_14",
@@ -16,13 +32,13 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "Smabble",
+    "shortName": "Smappee_beta",
     "targetPlatforms": [
         "chalk"
     ],
     "uuid": "096633c7-ec6d-4920-953d-f2cbb28d0ea8",
     "versionCode": 1,
-    "versionLabel": "0.3",
+    "versionLabel": "0.2",
     "watchapp": {
         "hiddenApp": false,
         "watchface": false

@@ -27,11 +27,12 @@ function SmappeeAPI(_main) {
       headers :{'Authorization': ' Bearer '+conf.access_token},
        },
       function(result) {
-        console.log(result);
-        //console.log(JSON.parse(data).serviceLocations[0].serviceLocationId);
-        conf.serviceLocationID=JSON.parse(result).serviceLocations[0].serviceLocationId;
-        console.log("locationID="+conf.serviceLocationID);
-        if (typeof handler!='undefined') handler({serviceLocationID:conf.serviceLocationID});
+        
+        var answer=JSON.parse(JSON.stringify(JSON.parse(result).serviceLocations));
+				console.log("Answer :");
+        
+				 console.log(JSON.stringify(answer));
+        if (typeof handler!='undefined') handler(answer);
       },
          function(data) {
            console.log("failure: "+ data); // test https
@@ -59,17 +60,17 @@ function SmappeeAPI(_main) {
   this.getConsumption= function(conf,handler)
   {
     console.log("Starting get Consumption");
-    if (typeof conf.serviceLocationID =="undefined")
+    if (typeof conf.serviceLocations[0].locationID=="undefined")
       {
-        console.log("No location ID");
+        console.log("No location index");
         this.getLocations(conf);
         if (typeof(handler)!='undefined') handler({error:true});
         return;
       }
     
-    console.log("location ID="+conf.serviceLocationID+", getting consumptions");
+    console.log("location ID="+conf.serviceLocations[conf.serviceLocationIndex].locationID+", getting consumptions");
     ajax({
-            url: 'https://app1pub.smappee.net/dev/v1/servicelocation/'+conf.serviceLocationID+'/consumption?'+
+            url: 'https://app1pub.smappee.net/dev/v1/servicelocation/'+conf.serviceLocations[conf.serviceLocationIndex].locationID+'/consumption?'+
             'aggregation=1&'+
             'from='+(Date.now()-20*60*1000)+
             '&to='+(Date.now()-60*1000),
@@ -139,20 +140,26 @@ function SmappeeAPI(_main) {
                 headers:'application/x-www-form-urlencoded;charset=UTF-8'
            },
         function(result) {
-          
+					console.log("succes of refresh. Resturn value :");
           console.log(result);
+					var r=JSON.parse(result);
           if (typeof handler != 'undefined')
             {
-              handler({
-              refresh_token:result.refresh_token,
-              access_token:result.access_token,
-              expires_on:(Date.now()+result.expires_in)
-              });
+              console.log("Refresh is a success, returning to handler");
+							//{"access_token":"f7bf4cfa-7b63-3639-b52b-823b6485bdd2","refresh_token":"a5f1fdb0-2f4d-3486-aa09-f700ad1d5b24","expires_in":86400}
+							var answer={
+              'refresh_token':r.refresh_token,
+              'access_token':r.access_token,
+              'expires_on':Date.now()+r.expires_in
+              };
+							console.log("answer:");
+          		console.log(answer);
+							handler(answer);
             } else
               {
-          conf.refresh_token=result.refresh_token;
-          conf.access_token=result.access_token;
-          conf.expires_on=(Date.now()+result.expires_in);
+          conf.refresh_token=r.refresh_token;
+          conf.access_token=r.access_token;
+          conf.expires_on=(Date.now()+r.expires_in);
               }
           
         },
