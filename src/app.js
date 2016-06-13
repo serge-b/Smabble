@@ -4,11 +4,12 @@
  * This is where you write your app.
  */
 
-var UI = require('ui');
 
-var  MENU_LOCATION=0;
+var MENU_LOCATION=0;
+var MENU_SYSTEM=1;
 
 var Settings = require('settings');
+var UI = require('ui');
 
 
 var smappee_conf = Settings.data('smappee_conf')||{};
@@ -28,23 +29,22 @@ var main = new UI.Card({
 
 
 var menu = new UI.Menu({
-  backgroundColor: 'black',
-  textColor: 'blue',
+  backgroundColor: 'white',
+  textColor: 'black',
   highlightBackgroundColor: 'blue',
-  highlightTextColor: 'black',
+  highlightTextColor: 'white',
   sections: [{
     title: 'Locations',
     items: [{
       title: 'First Item',
-      subtitle: 'Some subtitle',
-      icon: 'images/item_icon.png'
-    }, {
-      title: 'Second item'
+			subtitle: 'Some subtitle'},
+      
+			{title: 'Second item'
     }]
   },
 	{
-    title: 'Refresh',
-    items: []
+    title: 'System',
+		items: [{title:'refresh'}]
   }]
 });
 
@@ -245,6 +245,11 @@ menu.on('select', function(e) {
 	if (e.sectionIndex==MENU_LOCATION)
 		{
 			Settings.data("smappee_conf").serviceLocationIndex=e.itemIndex;
+			refresh();
+		}
+	if (e.sectionIndex==MENU_SYSTEM)
+		{
+			
 			refresh();
 		}
 	menu.hide();

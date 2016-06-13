@@ -60,6 +60,8 @@ function SmappeeAPI(_main) {
   this.getConsumption= function(conf,handler)
   {
     console.log("Starting get Consumption");
+		console.log(JSON.stringify(conf));
+		
     if (typeof conf.serviceLocations[0].locationID=="undefined")
       {
         console.log("No location index");
