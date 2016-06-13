@@ -15,7 +15,7 @@ var UI = require('ui');
 var smappee_conf = Settings.data('smappee_conf')||{};
 
 var SmappeeAPI = require('Smappee-api');
-
+var radial_graph = require('radial-graph');
 
 var main = new UI.Card({
   title: 'Smabble v0.3',
@@ -50,6 +50,8 @@ var menu = new UI.Menu({
 
 var smappee = new SmappeeAPI(main);
 
+var radialGraph=new radial_graph([10,20,30,40],[10,20,30,40]);
+//test
 
 
 var display_cons=function(result)
@@ -223,6 +225,41 @@ var refresh=function()
       
     }
 };
+var post_24h= function(result)
+{
+	console.log("post_24h"); 
+	if (typeof result.error != 'undefined')
+        {
+          console.log(JSON.stringify(result));    
+					
+        }
+      else
+        {
+					console.log("# of solar points "+result.consumptions.length);
+					var max=0;
+					var sol=0;
+					var _solar=[];
+					var _consumption=[];
+					var cons=0;
+				
+          for (var i=0;i<result.consumptions.length;i++)
+						{
+							sol= result.consumptions[i].solar;
+							cons= result.consumptions[i].consumption;
+							if (sol>max) max=sol;
+							if (cons>max) max=cons;
+							
+						}
+					for (i=0;i<result.consumptions.length;i++)//_solar.length;i++)
+						{
+							_solar.push(result.consumptions[i].solar*100/max);
+							_consumption.push(result.consumptions[i].consumption*100/max);
+						}
+					 radialGraph.set(_solar,_consumption);
+					 radialGraph.show();
+					
+        }
+};
 
 main.on('click', function(e) {
   console.log('Button ' + e.button + ' pressed.');
@@ -235,6 +272,12 @@ main.on('click', function(e) {
   if (e.button=="up")
     {
       menu.show();
+    }
+	if (e.button=="down")
+    {
+      console.log("getting 24h");
+			smappee.get24h(Settings.data("smappee_conf"),post_24h);
+			
     }
 });
 
@@ -255,7 +298,13 @@ menu.on('select', function(e) {
 	menu.hide();
 });
 
+radialGraph.graph.on('click', function(e) {
   
+  if (e.button=="select")
+    {
+      radialGraph.hide();
+    }
+});  
 
 main.show();
 refresh();

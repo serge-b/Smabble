@@ -94,6 +94,44 @@ function SmappeeAPI(_main) {
     );
   };
   
+	this.get24h= function(conf,handler)
+  {
+    console.log("Starting get 24h Consumption");
+		
+		
+    if (typeof conf.serviceLocations[0].locationID=="undefined")
+      {
+        console.log("No location index");
+        this.getLocations(conf);
+        if (typeof(handler)!='undefined') handler({error:'no location set'});
+        return;
+      }
+    
+   
+    ajax({
+            url: 'https://app1pub.smappee.net/dev/v1/servicelocation/'+conf.serviceLocations[conf.serviceLocationIndex].locationID+'/consumption?'+
+            'aggregation=1&'+
+            'from='+(Date.now()-24*60*60*1000)+
+            '&to='+(Date.now()-60*1000),
+     
+            method : 'GET',
+     
+      headers :{'Authorization': ' Bearer '+conf.access_token},
+       },
+      function(result) {
+        console.log("24hConsumption received");
+       
+        
+        if (typeof handler!='undefined') handler(JSON.parse(result));
+      },
+         function(result) {
+           console.log("failure: "+ result);
+           if (typeof(handler)!='undefined') handler({error:'24h error'});
+      }
+    );
+  };
+	
+	
    this.getToken=function(conf,handler){
       
       ajax({
