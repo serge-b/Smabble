@@ -6,6 +6,8 @@
 
 var UI = require('ui');
 
+var  MENU_LOCATION=0;
+
 var Settings = require('settings');
 
 
@@ -15,11 +17,37 @@ var SmappeeAPI = require('Smappee-api');
 
 
 var main = new UI.Card({
-  title: 'Smabble v0.2',
+  title: 'Smabble v0.3',
   subtitle: 'Smappee@wrist',
 	body: 'Starting'
   
 });
+
+
+
+
+
+var menu = new UI.Menu({
+  backgroundColor: 'black',
+  textColor: 'blue',
+  highlightBackgroundColor: 'blue',
+  highlightTextColor: 'black',
+  sections: [{
+    title: 'Locations',
+    items: [{
+      title: 'First Item',
+      subtitle: 'Some subtitle',
+      icon: 'images/item_icon.png'
+    }, {
+      title: 'Second item'
+    }]
+  },
+	{
+    title: 'Refresh',
+    items: []
+  }]
+});
+
 var smappee = new SmappeeAPI(main);
 
 
@@ -44,30 +72,43 @@ var display_cons=function(result)
             }
         }
 };
+var update_location_menu=function()
+{
+				var servLoc=Settings.data("smappee_conf").serviceLocations;
+	if (typeof servLoc != 'undefined')
+		{
+				menu.items(MENU_LOCATION,new Array(servLoc.length));
+			 		for (var i=0;i<servLoc.length;i++) {
+						menu.item(MENU_LOCATION, i, { title: servLoc[i].name, subtitle: 'ID = '+servLoc[i].locationID });	
+				 	}
+		} else
+			{
+				console.log("WARNING : no serviceLocation defined");
+				menu.items(MENU_LOCATION,[{title:'not defined'}]);
+			}
+};
+
 var display_locations_ok=function(result)
 {
    if (typeof result.error == 'undefined')
      {
           main.body("Location received");
-			    Settings.data("smappee_conf").serviceLocationIndex=0; // will need to allow the user to chose this via a menu in the future
+			     // will need to allow the user to chose this via a menu in the future
 			 		Settings.data("smappee_conf").serviceLocations=new Array(result.length);
 			 
-			 /*
-			 # of locations :1
-[PHONE] pebble-app.js:?: [{"serviceLocationId":7809,"name":"Page d'accueil"}]
-[PHONE] pebble-app.js:?: None
-[PHONE] pebble-app.js:?: [{"name":"Page d'accueil"}]
-*/
-			 	console.log('# of locations :'+result.length);
-			 console.log(JSON.stringify(result));
+			 	//console.log('# of locations :'+result.length);
+			 	//console.log(JSON.stringify(result));
 			 		
-          
+          menu.items(MENU_LOCATION,new Array(result.length));
 			 		for (var i=0;i<result.length;i++) {
 						//[{"serviceLocationId":7809,"name":"Page d'accueil"}]
 						Settings.data("smappee_conf").serviceLocations[i]={'name':result[i].name,'locationID':result[i].serviceLocationId}; 
-			 				
+			 			//menu.item(MENU_LOCATION, i, { title: result[i].name, subtitle: 'ID = '+result[i].serviceLocationId });	
 				 	}
-			 		console.log(JSON.stringify(Settings.data("smappee_conf").serviceLocations));
+			 		update_location_menu();
+			 		
+			 
+			 		//console.log(JSON.stringify(Settings.data("smappee_conf").serviceLocations));
           
           smappee.getConsumption(Settings.data('smappee_conf'),display_cons);      
      }
@@ -108,27 +149,27 @@ var once_token_obtained=function(answer)
         // handle error here
         return;
       }
-      console.log('answer :');
-      console.log(JSON.stringify(answer));
+      //console.log('answer :');
+      //console.log(JSON.stringify(answer));
       
       
       Settings.data("smappee_conf",answer);
-			console.log('New conf :');
-      console.log(JSON.stringify( Settings.data("smappee_conf")));
+			//console.log('New conf :');
+      //console.log(JSON.stringify( Settings.data("smappee_conf")));
       smappee.getLocations(smappee_conf,display_locations_ok); 
       
   
 };
 Pebble.addEventListener('webviewclosed', function(e) {
   // Decode the user's preferences
-  console.log(e.response);
-  var configData = JSON.parse(decodeURIComponent(e.response));
-  console.log("Decoded config");
-   console.log(JSON.stringify(configData));
+  //console.log(e.response);
+  //var configData = JSON.parse(decodeURIComponent(e.response));
+  //console.log("Decoded config");
+  //console.log(JSON.stringify(configData));
   main.body("received config");
   smappee_conf=JSON.parse(decodeURIComponent(e.response));
   Settings.data("smappee_conf",smappee_conf);
-  
+  Settings.data("smappee_conf").serviceLocationIndex=0;
   
   smappee.getToken(smappee_conf, once_token_obtained);
   
@@ -190,8 +231,27 @@ main.on('click', function(e) {
     {
       refresh();
     }
-  
+	
+  if (e.button=="up")
+    {
+      menu.show();
+    }
 });
+
+
+menu.on('select', function(e) {
+  console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
+  console.log('The item is titled "' + e.item.title + '"');
+	if (e.sectionIndex==MENU_LOCATION)
+		{
+			Settings.data("smappee_conf").serviceLocationIndex=e.itemIndex;
+			refresh();
+		}
+	menu.hide();
+});
+
+  
+
 main.show();
 refresh();
 
