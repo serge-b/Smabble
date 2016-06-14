@@ -16,7 +16,32 @@ function SmappeeAPI(_main) {
         QUARTERLY: 5
     };
 
- 
+  this.getLocationInfo = function (conf,handler)
+	{
+		console.log("Obtaining location ID");
+    ajax({
+            url: 'https://app1pub.smappee.net/dev/v1/servicelocation/'+conf.serviceLocations[conf.serviceLocationIndex].locationID+'/info',
+            method : 'GET',
+      
+      headers :{'Authorization': ' Bearer '+conf.access_token},
+       },
+      function(result) {
+        
+        var answer=JSON.parse(result);
+				console.log("Answer :");
+        
+				 console.log(result);
+        if (typeof handler!='undefined') handler(answer);
+      },
+         function(data) {
+           console.log("failure: "+ data); // test https
+           console.log("No locationID");
+           if (typeof handler!='undefined') handler({error:true, message:data});
+      }
+    );
+		
+	};
+	
   this.getLocations= function(conf, handler)
   {
     console.log("Obtaining location ID");
@@ -70,7 +95,7 @@ function SmappeeAPI(_main) {
         return;
       }
     
-    console.log("location ID="+conf.serviceLocations[conf.serviceLocationIndex].locationID+", getting consumptions");
+    
     ajax({
             url: 'https://app1pub.smappee.net/dev/v1/servicelocation/'+conf.serviceLocations[conf.serviceLocationIndex].locationID+'/consumption?'+
             'aggregation=1&'+
@@ -130,7 +155,34 @@ function SmappeeAPI(_main) {
       }
     );
   };
-	
+	/*
+	/
+	/
+	/
+	*/
+	 this.turnActuatorOn=function(conf,locationID,actuatorId,turnOn)
+	 {
+		  
+		 console.log('url :https://app1pub.smappee.net/dev/v1/servicelocation/'+locationID+'/actuator/'+actuatorId+'/'+((turnOn)?'on':'off'));
+		 ajax({
+              url: 'https://app1pub.smappee.net/dev/v1/servicelocation/'+locationID+'/actuator/'+actuatorId+'/'+((turnOn)?'on':'off'),
+              method : 'POST',
+				headers :{'Authorization': ' Bearer '+conf.access_token},
+        type : 'json',
+        data :{}
+       
+           },
+				 function(success){
+					 console.log("success "+success);
+				 },
+				 function(fail)
+				 {
+					 console.log("Failed "+fail);
+				 });
+		 
+	 };
+	//					Settings.data("smappee_conf").serviceLocations[Settings.data("smappee_conf").serviceLocationIndex].locationID,
+	//							e.itemIndex,false);
 	
    this.getToken=function(conf,handler){
       

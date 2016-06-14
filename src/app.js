@@ -6,7 +6,8 @@
 
 
 var MENU_LOCATION=0;
-var MENU_SYSTEM=1;
+var MENU_ACTUATORS=1;
+var MENU_SYSTEM=2;
 
 var Settings = require('settings');
 var UI = require('ui');
@@ -41,6 +42,10 @@ var menu = new UI.Menu({
       
 			{title: 'Second item'
     }]
+  },
+	{
+    title: 'Actuators',
+		items: [{title:'void'}]
   },
 	{
     title: 'System',
@@ -89,30 +94,61 @@ var update_location_menu=function()
 				menu.items(MENU_LOCATION,[{title:'not defined'}]);
 			}
 };
+var update_actuator_menu=function()
+{
+				var act=Settings.data("smappee_conf").location_info.actuators;
+				if (typeof act != 'undefined')
+					{
+							menu.items(MENU_ACTUATORS,new Array(act.length));
+								for (var i=0;i<act.length;i++) {
+									menu.item(MENU_ACTUATORS, i, { title: act[i].name,subtitle:'off'});	
+								}
+					} else
+						{
+							console.log("WARNING : no actuator defined");
+							menu.items(MENU_LOCATION,[{title:'none found'}]);
+						}
+};
+
+var post_location_info=function(result)
+{
+      if (typeof result.error == 'undefined')
+        {
+           Settings.data("smappee_conf").location_info=JSON.parse(JSON.stringify(result));
+					console.log("Actuators :");
+					console.log(JSON.stringify(Settings.data("smappee_conf").location_info.actuators));
+					update_actuator_menu();
+					smappee.getConsumption(Settings.data('smappee_conf'),display_cons); 
+					
+        }
+      else
+        {
+          main.body("Could not\r\n get location info");
+        }
+};
+
 
 var display_locations_ok=function(result)
 {
    if (typeof result.error == 'undefined')
      {
           main.body("Location received");
-			     // will need to allow the user to chose this via a menu in the future
+			   
 			 		Settings.data("smappee_conf").serviceLocations=new Array(result.length);
-			 
-			 	//console.log('# of locations :'+result.length);
-			 	//console.log(JSON.stringify(result));
-			 		
+		
           menu.items(MENU_LOCATION,new Array(result.length));
 			 		for (var i=0;i<result.length;i++) {
-						//[{"serviceLocationId":7809,"name":"Page d'accueil"}]
+						
 						Settings.data("smappee_conf").serviceLocations[i]={'name':result[i].name,'locationID':result[i].serviceLocationId}; 
-			 			//menu.item(MENU_LOCATION, i, { title: result[i].name, subtitle: 'ID = '+result[i].serviceLocationId });	
+			 			
 				 	}
 			 		update_location_menu();
-			 		
 			 
-			 		//console.log(JSON.stringify(Settings.data("smappee_conf").serviceLocations));
+			    if (typeof Settings.data("smappee_conf").serviceLocationIndex=='undefined') Settings.data("smappee_conf").serviceLocationIndex=0;
+			 		smappee.getLocationInfo(Settings.data("smappee_conf"),post_location_info);
+			 
+		      
           
-          smappee.getConsumption(Settings.data('smappee_conf'),display_cons);      
      }
   else
     {
@@ -201,6 +237,7 @@ var post_token_refresh=function(result)
 };
 
 
+
 var refresh=function()
 {
   if (typeof smappee_conf.expires_on=="undefined")
@@ -225,6 +262,8 @@ var refresh=function()
       
     }
 };
+
+
 var post_24h= function(result)
 {
 	console.log("post_24h"); 
@@ -262,7 +301,7 @@ var post_24h= function(result)
 };
 
 main.on('click', function(e) {
-  console.log('Button ' + e.button + ' pressed.');
+ 
   
   if (e.button=="select")
     {
@@ -281,6 +320,14 @@ main.on('click', function(e) {
     }
 });
 
+menu.on('longSelect', function(e) {
+	if (e.sectionIndex==MENU_ACTUATORS)
+		{
+			Settings.data("smappee_conf").actuatorIndex=e.itemIndex;
+			
+		}
+
+});
 
 menu.on('select', function(e) {
   console.log('Selected item #' + e.itemIndex + ' of section #' + e.sectionIndex);
@@ -288,7 +335,36 @@ menu.on('select', function(e) {
 	if (e.sectionIndex==MENU_LOCATION)
 		{
 			Settings.data("smappee_conf").serviceLocationIndex=e.itemIndex;
-			refresh();
+			smappee.getLocationInfo(Settings.data("smappee_conf"),post_location_info);
+		}
+	if (e.sectionIndex==MENU_ACTUATORS)
+		{
+			Settings.data("smappee_conf").actuatorIndex=e.itemIndex;
+			if (e.item.subtitle=='off')
+				{
+					e.item.subtitle='on';
+					console.log(
+						"turn On actuator"+Settings.data("smappee_conf").location_info.actuators[e.itemIndex].id+
+						' @'+Settings.data("smappee_conf").serviceLocations[Settings.data("smappee_conf").serviceLocationIndex].locationID);
+						
+						
+					smappee.turnActuatorOn(
+						Settings.data("smappee_conf"),
+						Settings.data("smappee_conf").serviceLocations[Settings.data("smappee_conf").serviceLocationIndex].locationID,
+						Settings.data("smappee_conf").location_info.actuators[e.itemIndex].id,
+						true);
+																 
+					
+				}
+			else
+				{
+					e.item.subtitle='off';
+					smappee.turnActuatorOn(
+						Settings.data("smappee_conf"),
+						Settings.data("smappee_conf").serviceLocations[Settings.data("smappee_conf").serviceLocationIndex].locationID,
+						Settings.data("smappee_conf").location_info.actuators[e.itemIndex].id,
+						false);
+				}
 		}
 	if (e.sectionIndex==MENU_SYSTEM)
 		{
