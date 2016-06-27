@@ -6,6 +6,10 @@
     "companyName": "PetiteAppli",
     "longName": "Smappee_beta",
     "projectType": "pebblejs",
+    "enableMultiJS": true,
+    "messageKeys": {
+            "dummy": 0
+        },
     "resources": {
         "media": [
             {
